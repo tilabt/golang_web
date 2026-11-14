@@ -15,8 +15,11 @@ func main() {
 		fmt.Fprint(w, "Login")
 	})
 
-	mux.HandleFunc("/posts/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Posts")
+	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		slug := r.PathValue("slug")
+		fmt.Fprintln(w, "Posts with slug => ", slug)
+		fmt.Fprintln(w, r.Method)
+		fmt.Fprintln(w, r.RequestURI)
 	})
 	mux.HandleFunc("/posts/likes/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Posts Likes")
