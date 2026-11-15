@@ -12,7 +12,14 @@ func main() {
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Login")
+		query := r.URL.Query()
+		name := query.Get("name")
+
+		if name == "" {
+			fmt.Fprint(w, "Please Login first")
+		} else {
+			fmt.Fprintf(w, "Welcome %s", name)
+		}
 	})
 
 	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
