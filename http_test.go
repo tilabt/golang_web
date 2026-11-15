@@ -34,6 +34,17 @@ func MultipleParameterValuesHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, strings.Join(names, " "))
 }
 
+func RequestHeader(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("content-type")
+	fmt.Fprint(w, contentType)
+}
+
+func ResponseHeader(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("X-Powered-By", "tilabt")
+
+	fmt.Fprint(w, "ok")
+}
+
 func TestHttp(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	recorder := httptest.NewRecorder()
@@ -80,4 +91,33 @@ func TestMultipleValues(t *testing.T) {
 
 	fmt.Println(bodyString) // [han innn]han innn
 
+}
+
+func TestRequestHeader(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	request.Header.Add("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	RequestHeader(recorder, request)
+
+	response := recorder.Result()
+	body, _ := io.ReadAll(response.Body)
+	// query := request.URL.Query()
+
+	bodyString := string(body)
+
+	fmt.Println(bodyString) // application/json
+
+}
+
+func TestResponseHeader(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	recorder := httptest.NewRecorder()
+
+	ResponseHeader(recorder, request)
+
+	response := recorder.Result()
+
+	responseHeader := response.Header.Get("X-Powered-By")
+	fmt.Println(responseHeader)
 }

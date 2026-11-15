@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -8,7 +9,17 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello World")
+		w.Header().Set("X-Powered-By", "tilabt")
+		w.Header().Set("Content-Type", "application/json")
+
+		response := map[string]string{
+			"message": "Hello World",
+		}
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		// fmt.Fprint(w, "Hello World")
+
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
