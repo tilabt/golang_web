@@ -45,6 +45,18 @@ func ResponseHeader(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "ok")
 }
 
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		panic(err)
+	}
+
+	email := r.PostForm.Get("email")
+	password := r.PostForm.Get("passowrd")
+
+	_ = password
+	fmt.Fprintf(w, "welcome back %s", email)
+}
+
 func TestHttp(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	recorder := httptest.NewRecorder()
@@ -120,4 +132,22 @@ func TestResponseHeader(t *testing.T) {
 
 	responseHeader := response.Header.Get("X-Powered-By")
 	fmt.Println(responseHeader)
+}
+
+func TestLogin(t *testing.T) {
+	requestBody := strings.NewReader("email=user@mail&password=secret")
+
+	request := httptest.NewRequest(http.MethodPost, "/login", requestBody)
+	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	recorder := httptest.NewRecorder()
+
+	LoginHandler(recorder, request)
+
+	response := recorder.Result()
+	body, _ := io.ReadAll(response.Body)
+
+	bodyString := string(body)
+	fmt.Println(bodyString)
+
 }

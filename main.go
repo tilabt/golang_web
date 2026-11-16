@@ -23,14 +23,36 @@ func main() {
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query()
-		name := query.Get("name")
+		//POST /login HTTP/1.1
+		// Content-Length: 42
+		// Content-Type: application/x-www-form-urlencoded
+		// Host: localhost:8000
+		// User-Agent: HTTPie
 
-		if name == "" {
-			fmt.Fprint(w, "Please Login first")
-		} else {
-			fmt.Fprintf(w, "Welcome %s", name)
+		// email=hanasa%40gmail.com&password=password
+
+		if err := r.ParseForm(); err != nil {
+			panic(err)
 		}
+
+		w.Header().Set("Content-type", "application/json")
+		// r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		email := r.PostForm.Get("email")
+		password := r.PostForm.Get("password")
+
+		response := map[string]any{
+			"message": fmt.Sprintf("Welcome back %s", email),
+			"data": map[string]string{
+				"email":    email,
+				"password": password,
+			},
+		}
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			panic(err)
+		}
+
 	})
 
 	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
