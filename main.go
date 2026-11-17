@@ -36,17 +36,27 @@ func main() {
 		}
 
 		w.Header().Set("Content-type", "application/json")
+		///opt/homebrew/Cellar/go/1.27.3/libexec/src/net/http/status.go
 		// r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 		email := r.PostForm.Get("email")
 		password := r.PostForm.Get("password")
+		response := map[string]any{}
 
-		response := map[string]any{
-			"message": fmt.Sprintf("Welcome back %s", email),
-			"data": map[string]string{
-				"email":    email,
-				"password": password,
-			},
+		if email != "" && password != "" {
+			w.WriteHeader(http.StatusOK)
+			response = map[string]any{
+				"message": fmt.Sprintf("Welcome back %s", email),
+				"data": map[string]string{
+					"email":    email,
+					"password": password,
+				},
+			}
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			response = map[string]any{
+				"message": "Email and Password are required",
+			}
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
