@@ -12,8 +12,13 @@ func main() {
 		w.Header().Set("X-Powered-By", "tilabt")
 		w.Header().Set("Content-Type", "application/json")
 
+		email := "stranger"
+		if cookie, err := r.Cookie("email"); err == nil {
+			email = cookie.Value
+		}
+
 		response := map[string]string{
-			"message": "Hello World",
+			"message": "Hello " + email,
 		}
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -44,7 +49,14 @@ func main() {
 		response := map[string]any{}
 
 		if email != "" && password != "" {
+			cookie := new(http.Cookie)
+			cookie.Name = "email"
+			cookie.Value = email
+			cookie.Path = "/"
+
+			http.SetCookie(w, cookie)
 			w.WriteHeader(http.StatusOK)
+
 			response = map[string]any{
 				"message": fmt.Sprintf("Welcome back %s", email),
 				"data": map[string]string{
