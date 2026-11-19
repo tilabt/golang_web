@@ -1,10 +1,15 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 )
+
+//go:embed resources
+var resources embed.FS
 
 func main() {
 	mux := http.NewServeMux()
@@ -86,6 +91,10 @@ func main() {
 	mux.HandleFunc("/posts/likes/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Posts Likes")
 	})
+
+	dir, _ := fs.Sub(resources, "resources")
+	files := http.FileServer(http.FS(dir))
+	mux.Handle("/public/", http.StripPrefix("/public", files))
 
 	address := "localhost:8000"
 
