@@ -32,6 +32,28 @@ func main() {
 
 	})
 
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			panic(err)
+		}
+
+		okHtml, _ := resources.ReadFile("resources/ok.html")
+		invalidHtml, _ := resources.ReadFile("resources/invalid.html")
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		email := r.PostForm.Get("email")
+		password := r.PostForm.Get("password")
+
+		if email != "" && password != "" {
+			fmt.Fprint(w, string(okHtml))
+			// w.Write(okHtml)
+		} else {
+			fmt.Fprint(w, string(invalidHtml))
+			// w.Write(invalidHtml)
+		}
+	})
+
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		//POST /login HTTP/1.1
 		// Content-Length: 42
