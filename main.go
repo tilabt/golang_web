@@ -16,6 +16,16 @@ var resources embed.FS
 //go:embed templates
 var templates embed.FS
 
+type ProfileAddress struct {
+	Country, Street string
+	No              int16
+}
+type Profile struct {
+	Title, Name string
+	Age         int16
+	Address     ProfileAddress
+}
+
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -142,6 +152,44 @@ func main() {
 		if err := t.ExecuteTemplate(w, "hello.gohtml", "Yuhu cuy"); err != nil {
 			log.Fatalf("Failed execute template: %v", err)
 		}
+	})
+
+	// using data map
+	mux.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles("./templates/me.gohtml"))
+		data := map[string]interface{}{
+			"Title": "Me Profile",
+			"Name":  "John Doe",
+			"Age":   28,
+			"Address": map[string]interface{}{
+				"Country": "NoWhere",
+				"Street":  "Sreeeet",
+				"No":      1234,
+			},
+		}
+		if err := t.ExecuteTemplate(w, "me.gohtml", data); err != nil {
+			log.Fatalf("Failed execute template: %v", err)
+		}
+
+	})
+
+	// using data struct
+	mux.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles("./templates/me.gohtml"))
+		data := Profile{
+			Title: "My Profile",
+			Name:  "John Doe",
+			Age:   28,
+			Address: ProfileAddress{
+				Country: "NoWhere",
+				Street:  "Sreeeet",
+				No:      1234,
+			},
+		}
+		if err := t.ExecuteTemplate(w, "me.gohtml", data); err != nil {
+			log.Fatalf("Failed execute template: %v", err)
+		}
+
 	})
 
 	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
