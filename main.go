@@ -4,12 +4,17 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/fs"
+	"log"
 	"net/http"
 )
 
 //go:embed resources
 var resources embed.FS
+
+//go:embed templates
+var templates embed.FS
 
 func main() {
 	mux := http.NewServeMux()
@@ -102,6 +107,41 @@ func main() {
 			panic(err)
 		}
 
+	})
+
+	mux.HandleFunc("/welcome", func(w http.ResponseWriter, r *http.Request) {
+		templateText := "<html><body>{{.}}</body></html>"
+		t := template.Must(template.New("ME").Parse(templateText))
+
+		if err := t.ExecuteTemplate(w, "ME", "Welcome back"); err != nil {
+			log.Fatalf("Failed execute template: %v", err)
+		}
+	})
+
+	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles("./templates/hello.gohtml"))
+
+		if err := t.ExecuteTemplate(w, "hello.gohtml", "Hello cuy"); err != nil {
+			log.Fatalf("Failed execute template: %v", err)
+		}
+	})
+
+	mux.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
+		// using template DIR instead of file
+		t := template.Must(template.ParseGlob("./templates/*.gohtml"))
+
+		if err := t.ExecuteTemplate(w, "hello.gohtml", "Hi cuy"); err != nil {
+			log.Fatalf("Failed execute template: %v", err)
+		}
+	})
+
+	mux.HandleFunc("/yuhu", func(w http.ResponseWriter, r *http.Request) {
+		// embed file
+		t := template.Must(template.ParseFS(templates, "templates/*.gohtml"))
+
+		if err := t.ExecuteTemplate(w, "hello.gohtml", "Yuhu cuy"); err != nil {
+			log.Fatalf("Failed execute template: %v", err)
+		}
 	})
 
 	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
