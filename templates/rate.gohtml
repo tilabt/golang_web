@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate</title>
+</head>
+
+<body>
+  <!--Max 5-->
+  {{if ge .Rate 4.5 }}
+    <h1>Very Good</h1>
+  {{else if ge .Rate 4.0}}
+    <h1>Good</h1>
+  {{else if ge .Rate 3.0}}
+    <h1>Fair</h1>
+  {{else if ge .Rate 2.0}}
+    <h1>Poor</h1>
+  {{else}}
+    <h1>Very Poor</h1>
+  {{end}}
+</body>
+
+</html>

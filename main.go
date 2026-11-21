@@ -23,7 +23,7 @@ type ProfileAddress struct {
 type Profile struct {
 	Title, Name string
 	Age         int16
-	Address     ProfileAddress
+	Address     *ProfileAddress
 }
 
 func main() {
@@ -157,11 +157,11 @@ func main() {
 	// using data map
 	mux.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
 		t := template.Must(template.ParseFiles("./templates/me.gohtml"))
-		data := map[string]interface{}{
+		data := map[string]any{
 			"Title": "Me Profile",
 			"Name":  "John Doe",
 			"Age":   28,
-			"Address": map[string]interface{}{
+			"Address": map[string]any{
 				"Country": "NoWhere",
 				"Street":  "Sreeeet",
 				"No":      1234,
@@ -180,11 +180,11 @@ func main() {
 			Title: "My Profile",
 			Name:  "John Doe",
 			Age:   28,
-			Address: ProfileAddress{
-				Country: "NoWhere",
-				Street:  "Sreeeet",
-				No:      1234,
-			},
+			// Address: ProfileAddress{
+			// 	Country: "NoWhere",
+			// 	Street:  "Sreeeet",
+			// 	No:      1234,
+			// },
 		}
 		if err := t.ExecuteTemplate(w, "me.gohtml", data); err != nil {
 			log.Fatalf("Failed execute template: %v", err)
@@ -192,6 +192,35 @@ func main() {
 
 	})
 
+	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+
+		t := template.Must(template.ParseFiles("./templates/user.gohtml"))
+		t.ExecuteTemplate(w, "user.gohtml", map[string]any{
+			"Name": name,
+		})
+	})
+
+	mux.HandleFunc("/rate", func(w http.ResponseWriter, r *http.Request) {
+		rate := 2.1
+
+		t := template.Must(template.ParseFiles("./templates/rate.gohtml"))
+		if err := t.ExecuteTemplate(w, "rate.gohtml", map[string]any{
+			"Rate": rate,
+		}); err != nil {
+			log.Printf("render rate template: %v", err)
+			http.Error(w, "Gagal merender halaman", http.StatusInternalServerError)
+		}
+	})
+	mux.HandleFunc("/posts", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles("./templates/posts.gohtml"))
+
+		t.ExecuteTemplate(w, "posts.gohtml", map[string]any{
+			// "Posts": []string{
+			// 	"Post-1", "Post-2", "Post-3",
+			// },
+		})
+	})
 	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
 		slug := r.PathValue("slug")
 		fmt.Fprintln(w, "Posts with slug => ", slug)
@@ -206,7 +235,7 @@ func main() {
 	files := http.FileServer(http.FS(dir))
 	mux.Handle("/public/", http.StripPrefix("/public", files))
 
-	address := "localhost:8000"
+	address := "localhost:3000"
 
 	server := http.Server{
 		Addr:    address,

@@ -12,10 +12,16 @@
   <h2>Age {{.Age}}</h2>
   <h3> Address: </h3>
   <ul>
-    <li>{{.Address.Country}}</li>
-    <li>{{.Address.Street}}</li>
-    <li>{{.Address.No}}</li>
+    {{with .Address}}
+    <li>{{.Country}}</li>
+    <li>{{.Street}}</li>
+    <li>{{.No}}</li>
+    {{else}}
+    <li>no address </li>
+    {{end}}
   </ul>
+  <!--<h4>should be hidden h4<h4>-->
+  {{/*<h4>should be hidden<h4>*/}}
 </body>
 
 </html>
