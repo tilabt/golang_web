@@ -195,9 +195,15 @@ func main() {
 	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
 
-		t := template.Must(template.ParseFiles("./templates/user.gohtml"))
-		t.ExecuteTemplate(w, "user.gohtml", map[string]any{
-			"Name": name,
+		t := template.Must(template.ParseFiles(
+			"./partials/layouts/base.gohtml",
+			"./templates/user.gohtml",
+			"./partials/nav.gohtml",
+		))
+
+		t.ExecuteTemplate(w, "base", map[string]any{
+			"Title": "My User",
+			"Name":  name,
 		})
 	})
 

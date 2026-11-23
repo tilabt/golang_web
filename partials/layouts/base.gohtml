@@ -1,0 +1,20 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Title}}</title>
+</head>
+
+<body>
+  <!--https://medium.com/@uygaroztcyln/clean-ui-with-gos-html-templates-base-partials-and-funcmaps-4915296c9097-->
+  {{template "partials/nav" .}} {{/* Title should be included since we include using "." on end of curly bracket */}}
+
+  {{block "content" .}} {{end}}
+  {{block "footer" .}} no footer {{end}}
+</body>
+
+</html>
+{{end}}
