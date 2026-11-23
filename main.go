@@ -239,6 +239,10 @@ func main() {
 		})
 	})
 
+	mux.HandleFunc("/redirect", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/yuhu", http.StatusTemporaryRedirect)
+	})
+
 	mux.HandleFunc("/rate", func(w http.ResponseWriter, r *http.Request) {
 		rate := 2.1
 
