@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strings"
 )
 
 //go:embed resources
@@ -24,6 +25,14 @@ type Profile struct {
 	Title, Name string
 	Age         int16
 	Address     *ProfileAddress
+}
+
+type User struct {
+	Title, Name string
+}
+
+func (u User) SayHello() string {
+	return fmt.Sprintf("Hello %s from FN", u.Name)
 }
 
 func main() {
@@ -194,16 +203,27 @@ func main() {
 
 	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
+		fn := template.FuncMap{
+			"upper": func(value string) string {
+				return strings.ToUpper(value)
+			},
+			"append": func(value, suffix string) string {
+				return value + suffix
+			},
+		}
 
-		t := template.Must(template.ParseFiles(
-			"./partials/layouts/base.gohtml",
-			"./templates/user.gohtml",
-			"./partials/nav.gohtml",
-		))
+		t := template.Must(template.
+			New("base").
+			Funcs(fn).
+			ParseFiles(
+				"./partials/layouts/base.gohtml",
+				"./templates/user.gohtml",
+				"./partials/nav.gohtml",
+			))
 
-		t.ExecuteTemplate(w, "base", map[string]any{
-			"Title": "My User",
-			"Name":  name,
+		t.ExecuteTemplate(w, "base", User{
+			Title: "My User",
+			Name:  name,
 		})
 	})
 

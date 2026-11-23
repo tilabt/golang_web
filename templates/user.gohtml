@@ -2,7 +2,7 @@
 
 {{define "content"}}
   {{if .Name}}
-  <h1>Hello {{.Name}}</h1>
+  <h1>{{upper .SayHello}}</h1>
   {{else}}
   <h1>Hello Stranger</h1>
   {{end}}
@@ -10,6 +10,6 @@
 
 {{define "footer"}}
 <footer>
-  this is footer
+  {{upper "this is footer"}}
 </footer>
 {{end}}
