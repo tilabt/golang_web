@@ -207,8 +207,13 @@ func main() {
 			"upper": func(value string) string {
 				return strings.ToUpper(value)
 			},
-			"append": func(value, suffix string) string {
+			// suffix first then value
+			"append": func(suffix, value string) string {
 				return value + suffix
+			},
+			// prefix first then value
+			"prepend": func(prefix, value string) string {
+				return prefix + value
 			},
 		}
 

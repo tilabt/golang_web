@@ -10,6 +10,6 @@
 
 {{define "footer"}}
 <footer>
-  {{upper "this is footer"}}
+  {{ "this is footer" | append  " this suffix" | upper | prepend "Hello prefix "}}
 </footer>
 {{end}}
