@@ -229,6 +229,16 @@ func main() {
 		})
 	})
 
+	mux.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+		body := r.URL.Query().Get("body")
+
+		userTmpl.ExecuteTemplate(w, "search.gohtml", map[string]any{
+			"Title": "Search",
+			// "Body":  template.HTML(body), // disable escaping
+			"Body": body, // auto enable escaping
+		})
+	})
+
 	mux.HandleFunc("/rate", func(w http.ResponseWriter, r *http.Request) {
 		rate := 2.1
 
