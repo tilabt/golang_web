@@ -17,6 +17,9 @@ var resources embed.FS
 //go:embed templates
 var templates embed.FS
 
+//go:embed templates partials
+var views embed.FS
+
 type ProfileAddress struct {
 	Country, Street string
 	No              int16
@@ -36,6 +39,31 @@ func (u User) SayHello() string {
 }
 
 func main() {
+	fn := template.FuncMap{
+		"upper": func(value string) string {
+			return strings.ToUpper(value)
+		},
+		// suffix first then value
+		"append": func(suffix, value string) string {
+			return value + suffix
+		},
+		// prefix first then value
+		"prepend": func(prefix, value string) string {
+			return prefix + value
+		},
+	}
+
+	userTmpl := template.Must(
+		template.New("base").
+			Funcs(fn).
+			ParseFS(
+				views,
+				"partials/layouts/base.gohtml",
+				"partials/nav.gohtml",
+				"templates/*.gohtml",
+			),
+	)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Powered-By", "tilabt")
@@ -138,34 +166,26 @@ func main() {
 	})
 
 	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles("./templates/hello.gohtml"))
-
-		if err := t.ExecuteTemplate(w, "hello.gohtml", "Hello cuy"); err != nil {
-			log.Fatalf("Failed execute template: %v", err)
+		if err := userTmpl.ExecuteTemplate(w, "hello.gohtml", "Hello cuy"); err != nil {
+			log.Printf("Failed execute template: %v", err)
+			http.Error(w, "Gagal merender halaman", http.StatusInternalServerError)
 		}
 	})
 
 	mux.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
-		// using template DIR instead of file
-		t := template.Must(template.ParseGlob("./templates/*.gohtml"))
-
-		if err := t.ExecuteTemplate(w, "hello.gohtml", "Hi cuy"); err != nil {
+		if err := userTmpl.ExecuteTemplate(w, "hello.gohtml", "Hi cuy"); err != nil {
 			log.Fatalf("Failed execute template: %v", err)
 		}
 	})
 
 	mux.HandleFunc("/yuhu", func(w http.ResponseWriter, r *http.Request) {
-		// embed file
-		t := template.Must(template.ParseFS(templates, "templates/*.gohtml"))
-
-		if err := t.ExecuteTemplate(w, "hello.gohtml", "Yuhu cuy"); err != nil {
+		if err := userTmpl.ExecuteTemplate(w, "hello.gohtml", "Yuhu cuy"); err != nil {
 			log.Fatalf("Failed execute template: %v", err)
 		}
 	})
 
 	// using data map
 	mux.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles("./templates/me.gohtml"))
 		data := map[string]any{
 			"Title": "Me Profile",
 			"Name":  "John Doe",
@@ -176,7 +196,7 @@ func main() {
 				"No":      1234,
 			},
 		}
-		if err := t.ExecuteTemplate(w, "me.gohtml", data); err != nil {
+		if err := userTmpl.ExecuteTemplate(w, "me.gohtml", data); err != nil {
 			log.Fatalf("Failed execute template: %v", err)
 		}
 
@@ -184,7 +204,6 @@ func main() {
 
 	// using data struct
 	mux.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles("./templates/me.gohtml"))
 		data := Profile{
 			Title: "My Profile",
 			Name:  "John Doe",
@@ -195,7 +214,7 @@ func main() {
 			// 	No:      1234,
 			// },
 		}
-		if err := t.ExecuteTemplate(w, "me.gohtml", data); err != nil {
+		if err := userTmpl.ExecuteTemplate(w, "me.gohtml", data); err != nil {
 			log.Fatalf("Failed execute template: %v", err)
 		}
 
@@ -203,30 +222,8 @@ func main() {
 
 	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
-		fn := template.FuncMap{
-			"upper": func(value string) string {
-				return strings.ToUpper(value)
-			},
-			// suffix first then value
-			"append": func(suffix, value string) string {
-				return value + suffix
-			},
-			// prefix first then value
-			"prepend": func(prefix, value string) string {
-				return prefix + value
-			},
-		}
 
-		t := template.Must(template.
-			New("base").
-			Funcs(fn).
-			ParseFiles(
-				"./partials/layouts/base.gohtml",
-				"./templates/user.gohtml",
-				"./partials/nav.gohtml",
-			))
-
-		t.ExecuteTemplate(w, "base", User{
+		userTmpl.ExecuteTemplate(w, "base", User{
 			Title: "My User",
 			Name:  name,
 		})
@@ -235,8 +232,7 @@ func main() {
 	mux.HandleFunc("/rate", func(w http.ResponseWriter, r *http.Request) {
 		rate := 2.1
 
-		t := template.Must(template.ParseFiles("./templates/rate.gohtml"))
-		if err := t.ExecuteTemplate(w, "rate.gohtml", map[string]any{
+		if err := userTmpl.ExecuteTemplate(w, "rate.gohtml", map[string]any{
 			"Rate": rate,
 		}); err != nil {
 			log.Printf("render rate template: %v", err)
@@ -244,12 +240,10 @@ func main() {
 		}
 	})
 	mux.HandleFunc("/posts", func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles("./templates/posts.gohtml"))
-
-		t.ExecuteTemplate(w, "posts.gohtml", map[string]any{
-			// "Posts": []string{
-			// 	"Post-1", "Post-2", "Post-3",
-			// },
+		userTmpl.ExecuteTemplate(w, "posts.gohtml", map[string]any{
+			"Posts": []string{
+				"Post-1", "Post-2", "Post-3",
+			},
 		})
 	})
 	mux.HandleFunc("/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
