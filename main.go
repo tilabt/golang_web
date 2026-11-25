@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/fs"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -19,6 +20,8 @@ var templates embed.FS
 
 //go:embed templates partials
 var views embed.FS
+
+var address = "localhost:3000"
 
 type ProfileAddress struct {
 	Country, Street string
@@ -270,11 +273,36 @@ func main() {
 		fmt.Fprint(w, "Posts Likes")
 	})
 
-	dir, _ := fs.Sub(resources, "resources")
-	files := http.FileServer(http.FS(dir))
-	mux.Handle("/public/", http.StripPrefix("/public", files))
+	mux.HandleFunc("POST /upload", func(w http.ResponseWriter, r *http.Request) {
+		// userTmpl.ExecuteTemplate(w, "upload.gohtml", nil)
+		file, fileHeader, err := r.FormFile("file")
+		if err != nil {
+			panic(err)
+		}
+		fileDestination, err := os.Create("./resources/storage/" + fileHeader.Filename)
+		if err != nil {
+			panic(err)
+		}
+		_, err = io.Copy(fileDestination, file)
+		if err != nil {
+			panic(err)
+		}
 
-	address := "localhost:3000"
+		name := r.PostFormValue("name")
+
+		response := map[string]any{
+			"name": name,
+			"file": address + "/public/storage/" + fileHeader.Filename,
+		}
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			panic(err)
+		}
+
+	})
+	// dir, _ := fs.Sub(resources, "resources")
+	files := http.FileServer(http.Dir("./resources"))
+	mux.Handle("/public/", http.StripPrefix("/public", files))
 
 	server := http.Server{
 		Addr:    address,
