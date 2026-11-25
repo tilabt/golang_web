@@ -314,13 +314,17 @@ func main() {
 
 	})
 
+	mux.HandleFunc("/panic", func(w http.ResponseWriter, r *http.Request) {
+		panic("heheh")
+	})
+
 	// dir, _ := fs.Sub(resources, "resources")
 	files := http.FileServer(http.Dir("./resources"))
 	mux.Handle("/public/", http.StripPrefix("/public", files))
 
 	server := http.Server{
 		Addr:    address,
-		Handler: mux,
+		Handler: chain(mux, loggingMiddleware, errorMiddleware),
 	}
 
 	fmt.Printf("Server running on http://%s", address)
@@ -329,4 +333,34 @@ func main() {
 		panic(err)
 	}
 
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func errorMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			err := recover()
+			if err != nil {
+				fmt.Println("Error happening")
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "Error : %s", err)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+type Middleware func(http.Handler) http.Handler
+
+func chain(handler http.Handler, middlewares ...Middleware) http.Handler {
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		handler = middlewares[i](handler)
+	}
+	return handler
 }
