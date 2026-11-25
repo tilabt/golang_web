@@ -300,6 +300,20 @@ func main() {
 		}
 
 	})
+	mux.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
+		file := r.URL.Query().Get("file")
+
+		if file == "" {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", file))
+		http.ServeFile(w, r, "./resources/storage/"+file)
+
+	})
+
 	// dir, _ := fs.Sub(resources, "resources")
 	files := http.FileServer(http.Dir("./resources"))
 	mux.Handle("/public/", http.StripPrefix("/public", files))
